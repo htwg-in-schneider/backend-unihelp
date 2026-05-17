@@ -1,20 +1,30 @@
 package de.htwg.in.schneider.unihelp.backend.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class Offer {
-    private long id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
     private String university;
     private String course;
     private String module;
-    private double price;
+    private Double price;
     private String description;
     private String availableTimes;
     private String language;
     private String format;
-    private boolean isActive;
+    private Boolean isActive;
 
     public Offer() {}
 
-    public Offer(long id, String university, String course, String module, double price, String description, String availableTimes, String language, String format, boolean isActive) {
+    public Offer(Long id, String university, String course, String module, double price, String description, String availableTimes, String language, String format, boolean isActive) {
         this.id = id;
         this.university = university;
         this.course = course;
@@ -27,10 +37,10 @@ public class Offer {
         this.isActive = isActive;
     }
 
-    public long getId() {
+    public Long getId() {
         return id; 
     }
-    public void setId(long id) { 
+    public void setId(Long id) { 
         this.id = id; 
     }
 
@@ -102,5 +112,34 @@ public class Offer {
     }
     public void setIsActive(boolean isActive) { 
         this.isActive = isActive; 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Offer offer = (Offer) o;
+        return id != null && id.equals(offer.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return "Offer{" +
+                "id=" + id +
+                ", university='" + university + '\'' +
+                ", course='" + course + '\'' +
+                ", module='" + module + '\'' +
+                ", price=" + price +
+                ", description='" + description + '\'' +
+                ", availableTimes='" + availableTimes + '\'' +
+                ", language='" + language + '\'' +
+                ", format='" + format + '\'' +
+                ", isActive=" + isActive +
+                '}';
     }
 }
