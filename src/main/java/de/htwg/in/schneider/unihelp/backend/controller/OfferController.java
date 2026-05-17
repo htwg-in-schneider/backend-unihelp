@@ -1,5 +1,6 @@
 package de.htwg.in.schneider.unihelp.backend.controller;
 
+import de.htwg.in.schneider.unihelp.backend.model.Offer;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,31 +15,33 @@ import java.util.List;
 @RequestMapping("/api/offer")
 public class OfferController {
 
-    public static class Offer {
-        private String module;
-        private String description;
-
-        public Offer(String module, String description) {
-            this.module = module;
-            this.description = description;
-        }
-
-        public String getModule() {
-            return module;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-    }
-
     @GetMapping
     public List<Offer> getOffers() {
-        return Arrays.asList(
-                new Offer("Datenbank- und Informationssysteme 1", "Hilfe bei SQL und ER-Modellen"),
-                new Offer("Mathematik für Wirtschaftsinformatik 1 & 2", "Mathematik ist nicht schwer!"),
-                new Offer("Statistik", "Kombinatorik und Wahrscheinlichkeitsrechnung unkompliziert erklärt")
-        );
+        Offer dbis = new Offer();
+        dbis.setId(1L);
+        dbis.setUniversity("HTWG Konstanz");
+        dbis.setCourse("Wirtschaftsinformatik");
+        dbis.setModule("Datenbank- und Informationssysteme 1");
+        dbis.setPrice(15.00);
+        dbis.setDescription("Ich helfe dir gerne bei SQL und Datenbankentwürfen. :)");
+        dbis.setAvailableTimes("Sa, So 10:00 - 12:00");
+        dbis.setLanguage("Deutsch");
+        dbis.setFormat("Online & Präsenz");
+        dbis.setIsActive(true);
+
+        Offer math = new Offer();
+        math.setId(2L);
+        math.setUniversity("HTWG Konstanz");
+        math.setCourse("Wirtschaftsinformatik");
+        math.setModule("Mathematik für Wirtschaftsinformatik 1 & 2");
+        math.setPrice(12.00);
+        math.setDescription("Mathe ist gar nicht so schwer, wir werden alle Altklausuren durchrechnen.");
+        math.setAvailableTimes("Mo, Mi 18:00 - 20:00");
+        math.setLanguage("Deutsch");
+        math.setFormat("Präsenz & Online");
+        math.setIsActive(true);
+
+        return Arrays.asList(dbis, math);
     }
 
     @PostMapping
