@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.htwg.in.schneider.unihelp.backend.model.Offer;
+import de.htwg.in.schneider.unihelp.backend.model.Format;
 import de.htwg.in.schneider.unihelp.backend.repository.OfferRepository;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ public class DataLoader {
     @Bean
     public CommandLineRunner loadData(OfferRepository repository) {
         return args -> {
-            if (repository.count() == 0) { 
+            if (repository.count() == 0) {
                 LOGGER.info("Database is empty. Loading initial UniHelp data...");
                 loadInitialData(repository);
             } else {
@@ -37,9 +38,9 @@ public class DataLoader {
         dbis.setDescription("Ich helfe dir gerne bei SQL und Datenbankentwürfen. :)");
         dbis.setAvailableTimes("Sa, So 10:00 - 12:00");
         dbis.setLanguage("Deutsch");
-        dbis.setFormat("Online & Präsenz");
+        dbis.setFormat(Format.HYBRID);
         dbis.setIsActive(true);
-        
+
         Offer math = new Offer();
         math.setUniversity("HTWG Konstanz");
         math.setCourse("Wirtschaftsinformatik");
@@ -48,18 +49,19 @@ public class DataLoader {
         math.setDescription("Mathe ist gar nicht so schwer, wir werden alle Altklausuren durchrechnen.");
         math.setAvailableTimes("Mo, Mi 18:00 - 20:00");
         math.setLanguage("Deutsch");
-        math.setFormat("Präsenz & Online");
+        math.setFormat(Format.HYBRID);
         math.setIsActive(true);
-        
+
         Offer stat = new Offer();
         stat.setUniversity("HTWG Konstanz");
         stat.setCourse("Wirtschaftsinformatik");
         stat.setModule("Statistik");
         stat.setPrice(10.00);
-        stat.setDescription("Glaube nie einer Statistik, die du nicht selbst gefälscht hast. Ich zeige dir, wie du die Klausur bestehst.");
+        stat.setDescription(
+                "Glaube nie einer Statistik, die du nicht selbst gefälscht hast. Ich zeige dir, wie du die Klausur bestehst.");
         stat.setAvailableTimes("Fr 14:00 - 18:00");
         stat.setLanguage("Deutsch");
-        stat.setFormat("Präsenz");
+        stat.setFormat(Format.PRAESENZ);
         stat.setIsActive(true);
 
         repository.saveAll(Arrays.asList(dbis, math, stat));

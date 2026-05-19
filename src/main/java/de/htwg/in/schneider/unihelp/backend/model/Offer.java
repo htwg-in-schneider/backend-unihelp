@@ -1,6 +1,8 @@
 package de.htwg.in.schneider.unihelp.backend.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,12 +21,17 @@ public class Offer {
     private String description;
     private String availableTimes;
     private String language;
-    private String format;
+
+    @Enumerated(EnumType.STRING)
+    private Format format;
+
     private Boolean isActive;
 
-    public Offer() {}
+    public Offer() {
+    }
 
-    public Offer(Long id, String university, String course, String module, double price, String description, String availableTimes, String language, String format, boolean isActive) {
+    public Offer(Long id, String university, String course, String module, double price, String description,
+            String availableTimes, String language, Format format, boolean isActive) {
         this.id = id;
         this.university = university;
         this.course = course;
@@ -38,86 +45,91 @@ public class Offer {
     }
 
     public Long getId() {
-        return id; 
-    }
-    public void setId(Long id) { 
-        this.id = id; 
+        return id;
     }
 
-    public String getUniversity() { 
-        return university; 
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public void setUniversity(String university) { 
-        this.university = university; 
+    public String getUniversity() {
+        return university;
     }
 
-    public String getCourse() { 
-        return course; 
+    public void setUniversity(String university) {
+        this.university = university;
     }
 
-    public void setCourse(String course) { 
-        this.course = course; 
+    public String getCourse() {
+        return course;
     }
 
-    public String getModule() { 
-        return module; 
+    public void setCourse(String course) {
+        this.course = course;
     }
 
-    public void setModule(String module) { 
-        this.module = module; 
+    public String getModule() {
+        return module;
     }
 
-    public double getPrice() { 
-        return price; 
+    public void setModule(String module) {
+        this.module = module;
     }
 
-    public void setPrice(double price) { 
-        this.price = price; 
+    public double getPrice() {
+        return price;
     }
 
-    public String getDescription() { 
-        return description; 
-    }
-    public void setDescription(String description) { 
-        this.description = description; 
+    public void setPrice(double price) {
+        this.price = price;
     }
 
-    public String getAvailableTimes() { 
-        return availableTimes; 
+    public String getDescription() {
+        return description;
     }
 
-    public void setAvailableTimes(String availableTimes) { 
-        this.availableTimes = availableTimes; 
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public String getLanguage() { 
-        return language; 
+    public String getAvailableTimes() {
+        return availableTimes;
     }
 
-    public void setLanguage(String language) { 
-        this.language = language; 
+    public void setAvailableTimes(String availableTimes) {
+        this.availableTimes = availableTimes;
     }
 
-    public String getFormat() { 
-        return format; 
+    public String getLanguage() {
+        return language;
     }
 
-    public void setFormat(String format) { 
-        this.format = format; 
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
-    public boolean getIsActive() { 
-        return isActive; 
+    public Format getFormat() {
+        return format;
     }
-    public void setIsActive(boolean isActive) { 
-        this.isActive = isActive; 
+
+    public void setFormat(Format format) {
+        this.format = format;
+    }
+
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Offer offer = (Offer) o;
         return id != null && id.equals(offer.id);
     }
@@ -138,7 +150,7 @@ public class Offer {
                 ", description='" + description + '\'' +
                 ", availableTimes='" + availableTimes + '\'' +
                 ", language='" + language + '\'' +
-                ", format='" + format + '\'' +
+                ", format=" + format +
                 ", isActive=" + isActive +
                 '}';
     }
