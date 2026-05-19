@@ -28,13 +28,13 @@ public class OfferController {
     public List<Offer> getOffers(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String format) {
-        
+
         boolean hasSearch = search != null && !search.trim().isEmpty();
-        
+
         Format formatEnum = null;
         if (format != null && !format.trim().isEmpty()) {
             try {
-                formatEnum = Format.valueOf(format.trim().toUpperCase()); 
+                formatEnum = Format.valueOf(format.trim().toUpperCase());
             } catch (IllegalArgumentException e) {
             }
         }
@@ -52,17 +52,16 @@ public class OfferController {
         }
 
         if (hasSearch && hasFormat) {
-            return offerRepository.findByFormatInAndModuleContainingIgnoreCaseOrFormatInAndCourseContainingIgnoreCaseOrFormatInAndUniversityContainingIgnoreCase(
-                allowedFormats, search, allowedFormats, search, allowedFormats, search
-            );
-        } 
-        else if (hasSearch) {
-            return offerRepository.findByModuleContainingIgnoreCaseOrCourseContainingIgnoreCaseOrUniversityContainingIgnoreCase(search, search, search);
-        } 
-        else if (hasFormat) {
-            return offerRepository.findByFormatIn(allowedFormats); 
-        } 
-        else {
+            return offerRepository
+                    .findByFormatInAndModuleContainingIgnoreCaseOrFormatInAndCourseContainingIgnoreCaseOrFormatInAndUniversityContainingIgnoreCase(
+                            allowedFormats, search, allowedFormats, search, allowedFormats, search);
+        } else if (hasSearch) {
+            return offerRepository
+                    .findByModuleContainingIgnoreCaseOrCourseContainingIgnoreCaseOrUniversityContainingIgnoreCase(
+                            search, search, search);
+        } else if (hasFormat) {
+            return offerRepository.findByFormatIn(allowedFormats);
+        } else {
             return offerRepository.findAll();
         }
     }
@@ -101,7 +100,9 @@ public class OfferController {
         offer.setModule(offerDetails.getModule());
         offer.setPrice(offerDetails.getPrice());
         offer.setDescription(offerDetails.getDescription());
-        offer.setAvailableTimes(offerDetails.getAvailableTimes());
+
+        offer.setAvailabilities(offerDetails.getAvailabilities());
+
         offer.setLanguage(offerDetails.getLanguage());
         offer.setFormat(offerDetails.getFormat());
         offer.setIsActive(offerDetails.getIsActive());

@@ -1,13 +1,21 @@
 package de.htwg.in.schneider.unihelp.backend.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Offer {
 
     @Id
@@ -19,7 +27,6 @@ public class Offer {
     private String module;
     private Double price;
     private String description;
-    private String availableTimes;
     private String language;
 
     @Enumerated(EnumType.STRING)
@@ -27,18 +34,20 @@ public class Offer {
 
     private Boolean isActive;
 
+    @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Availability> availabilities = new ArrayList<>();
+
     public Offer() {
     }
 
     public Offer(Long id, String university, String course, String module, double price, String description,
-            String availableTimes, String language, Format format, boolean isActive) {
+            String language, Format format, boolean isActive) {
         this.id = id;
         this.university = university;
         this.course = course;
         this.module = module;
         this.price = price;
         this.description = description;
-        this.availableTimes = availableTimes;
         this.language = language;
         this.format = format;
         this.isActive = isActive;
@@ -92,14 +101,6 @@ public class Offer {
         this.description = description;
     }
 
-    public String getAvailableTimes() {
-        return availableTimes;
-    }
-
-    public void setAvailableTimes(String availableTimes) {
-        this.availableTimes = availableTimes;
-    }
-
     public String getLanguage() {
         return language;
     }
@@ -122,6 +123,29 @@ public class Offer {
 
     public void setIsActive(boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public List<Availability> getAvailabilities() {
+        return availabilities;
+    }
+
+    public void setAvailabilities(List<Availability> availabilities) {
+        this.availabilities.clear();
+        if (availabilities != null) {
+            for (Availability a : availabilities) {
+                this.addAvailability(a);
+            }
+        }
+    }
+
+    public void addAvailability(Availability availability) {
+        this.availabilities.add(availability);
+        availability.setOffer(this);
+    }
+
+    public void removeAvailability(Availability availability) {
+        this.availabilities.remove(availability);
+        availability.setOffer(null);
     }
 
     @Override
@@ -148,7 +172,6 @@ public class Offer {
                 ", module='" + module + '\'' +
                 ", price=" + price +
                 ", description='" + description + '\'' +
-                ", availableTimes='" + availableTimes + '\'' +
                 ", language='" + language + '\'' +
                 ", format=" + format +
                 ", isActive=" + isActive +
