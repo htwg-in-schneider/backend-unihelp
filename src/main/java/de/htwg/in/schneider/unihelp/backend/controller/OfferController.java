@@ -4,11 +4,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import de.htwg.in.schneider.unihelp.backend.model.Offer;
 import de.htwg.in.schneider.unihelp.backend.model.Format;
+import de.htwg.in.schneider.unihelp.backend.model.Role;
+import de.htwg.in.schneider.unihelp.backend.model.User;
 import de.htwg.in.schneider.unihelp.backend.repository.OfferRepository;
+import de.htwg.in.schneider.unihelp.backend.repository.UserRepository;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +28,28 @@ public class OfferController {
 
     @Autowired
     private OfferRepository offerRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private boolean isRegisteredUser(Jwt jwt) {
+        if (jwt == null || jwt.getSubject() == null) {
+            return false;
+        }
+        Optional<User> user = userRepository.findByOauthId(jwt.getSubject());
+        return user.isPresent();
+    }
+
+    private boolean isOwnerOrAdmin(Jwt jwt, Offer offer) {
+        if (jwt == null || jwt.getSubject() == null) {
+            return false;
+        }
+        Optional<User> user = userRepository.findByOauthId(jwt.getSubject());
+        if (user.isPresent() && user.get().getRole() == Role.ADMIN) {
+            return true;
+        }
+        return offer.getOwnerOauthId() != null && offer.getOwnerOauthId().equals(jwt.getSubject());
+    }
 
     @GetMapping
     public List<Offer> getOffers(
@@ -77,24 +104,40 @@ public class OfferController {
     }
 
     @PostMapping
-    public Offer createOffer(@RequestBody Offer offer) {
+    public ResponseEntity<Offer> createOffer(@AuthenticationPrincipal Jwt jwt, @RequestBody Offer offer) {
+        if (!isRegisteredUser(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
         if (offer.getId() != null) {
             offer.setId(null);
-            LOG.warn(
-                    "Attempted to create an offer with an existing ID. ID has been set to null to create a new offer.");
         }
+
+        offer.setOwnerOauthId(jwt.getSubject());
+
         Offer newOffer = offerRepository.save(offer);
         LOG.info("Created new offer with id " + newOffer.getId());
-        return newOffer;
+        return ResponseEntity.ok(newOffer);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Offer> updateOffer(@PathVariable Long id, @RequestBody Offer offerDetails) {
+    public ResponseEntity<Offer> updateOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+            @RequestBody Offer offerDetails) {
+        if (!isRegisteredUser(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
         Optional<Offer> opt = offerRepository.findById(id);
         if (!opt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+
         Offer offer = opt.get();
+
+        if (!isOwnerOrAdmin(jwt, offer)) {
+            return ResponseEntity.status(403).build();
+        }
+
         offer.setUniversity(offerDetails.getUniversity());
         offer.setCourse(offerDetails.getCourse());
         offer.setModule(offerDetails.getModule());
@@ -112,12 +155,41 @@ public class OfferController {
         return ResponseEntity.ok(updatedOffer);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteOffer(@PathVariable Long id) {
+    @PutMapping("/{id}/book")
+    public ResponseEntity<Offer> bookOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+            @RequestBody Offer offerDetails) {
+        if (!isRegisteredUser(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
         Optional<Offer> opt = offerRepository.findById(id);
         if (!opt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
+
+        Offer offer = opt.get();
+        offer.setAvailabilities(offerDetails.getAvailabilities());
+
+        Offer updatedOffer = offerRepository.save(offer);
+        LOG.info("User {} updated bookings for offer {}", jwt.getSubject(), id);
+        return ResponseEntity.ok(updatedOffer);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        if (!isRegisteredUser(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<Offer> opt = offerRepository.findById(id);
+        if (!opt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!isOwnerOrAdmin(jwt, opt.get())) {
+            return ResponseEntity.status(403).build();
+        }
+
         offerRepository.delete(opt.get());
         LOG.info("Deleted offer with id " + id);
         return ResponseEntity.noContent().build();

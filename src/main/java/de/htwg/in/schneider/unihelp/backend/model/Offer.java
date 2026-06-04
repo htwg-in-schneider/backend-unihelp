@@ -34,6 +34,8 @@ public class Offer {
 
     private Boolean isActive;
 
+    private String ownerOauthId;
+
     @OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Availability> availabilities = new ArrayList<>();
 
@@ -41,7 +43,7 @@ public class Offer {
     }
 
     public Offer(Long id, String university, String course, String module, double price, String description,
-            String language, Format format, boolean isActive) {
+            String language, Format format, boolean isActive, String ownerOauthId) {
         this.id = id;
         this.university = university;
         this.course = course;
@@ -51,6 +53,7 @@ public class Offer {
         this.language = language;
         this.format = format;
         this.isActive = isActive;
+        this.ownerOauthId = ownerOauthId;
     }
 
     public Long getId() {
@@ -125,6 +128,14 @@ public class Offer {
         this.isActive = isActive;
     }
 
+    public String getOwnerOauthId() {
+        return ownerOauthId;
+    }
+
+    public void setOwnerOauthId(String ownerOauthId) {
+        this.ownerOauthId = ownerOauthId;
+    }
+
     public List<Availability> getAvailabilities() {
         return availabilities;
     }
@@ -175,6 +186,7 @@ public class Offer {
                 ", language='" + language + '\'' +
                 ", format=" + format +
                 ", isActive=" + isActive +
+                ", ownerOauthId='" + ownerOauthId + '\'' +
                 '}';
     }
 }
