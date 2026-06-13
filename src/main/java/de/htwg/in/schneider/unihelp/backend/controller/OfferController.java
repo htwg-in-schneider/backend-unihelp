@@ -115,6 +115,13 @@ public class OfferController {
 
         offer.setOwnerOauthId(jwt.getSubject());
 
+        Optional<User> optUser = userRepository.findByOauthId(jwt.getSubject());
+        if (optUser.isPresent()) {
+            offer.setOwnerName(optUser.get().getName());
+        } else {
+            offer.setOwnerName("Tutor");
+        }
+
         Offer newOffer = offerRepository.save(offer);
         LOG.info("Created new offer with id " + newOffer.getId());
         return ResponseEntity.ok(newOffer);

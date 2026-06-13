@@ -22,6 +22,7 @@ public class Offer {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String ownerName;
     private String university;
     private String course;
     private String module;
@@ -62,6 +63,14 @@ public class Offer {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+    
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
     }
 
     public String getUniversity() {
