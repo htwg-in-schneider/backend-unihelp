@@ -9,9 +9,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import de.htwg.in.schneider.unihelp.backend.model.Offer;
+import de.htwg.in.schneider.unihelp.backend.model.Booking;
 import de.htwg.in.schneider.unihelp.backend.model.Format;
 import de.htwg.in.schneider.unihelp.backend.model.Role;
 import de.htwg.in.schneider.unihelp.backend.model.User;
+import de.htwg.in.schneider.unihelp.backend.repository.BookingRepository;
 import de.htwg.in.schneider.unihelp.backend.repository.OfferRepository;
 import de.htwg.in.schneider.unihelp.backend.repository.UserRepository;
 
@@ -19,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/offer")
@@ -31,6 +35,9 @@ public class OfferController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
 
     private boolean isRegisteredUser(Jwt jwt) {
         if (jwt == null || jwt.getSubject() == null) {
@@ -200,5 +207,24 @@ public class OfferController {
         offerRepository.delete(opt.get());
         LOG.info("Deleted offer with id " + id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<List<Map<String, Object>>> getOfferReviews(@PathVariable Long id) {
+        List<Booking> bookings = bookingRepository.findByOfferIdAndStatus(id, "RATED");
+        List<Map<String, Object>> reviews = new ArrayList<>();
+
+        for (Booking b : bookings) {
+            if (b.getReview() != null) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", b.getReview().getId());
+                map.put("studentName", b.getStudentName());
+                map.put("ratingStars", b.getReview().getRatingStars());
+                map.put("ratingComment", b.getReview().getRatingComment());
+                map.put("createdAt", b.getReview().getCreatedAt());
+                reviews.add(map);
+            }
+        }
+        return ResponseEntity.ok(reviews);
     }
 }

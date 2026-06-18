@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import de.htwg.in.schneider.unihelp.backend.model.Booking;
 import de.htwg.in.schneider.unihelp.backend.model.Availability;
 import de.htwg.in.schneider.unihelp.backend.model.User;
+import de.htwg.in.schneider.unihelp.backend.model.Review;
 import de.htwg.in.schneider.unihelp.backend.repository.BookingRepository;
 import de.htwg.in.schneider.unihelp.backend.repository.AvailabilityRepository;
 import de.htwg.in.schneider.unihelp.backend.repository.UserRepository;
@@ -98,7 +99,7 @@ public class BookingController {
 
     @PutMapping("/{id}/rate")
     public ResponseEntity<Booking> rateBooking(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
-            @RequestBody Booking ratingRequest) {
+            @RequestBody Review ratingRequest) {
         Optional<Booking> opt = bookingRepository.findById(id);
         if (!opt.isPresent())
             return ResponseEntity.notFound().build();
@@ -108,8 +109,9 @@ public class BookingController {
             return ResponseEntity.status(403).build();
 
         booking.setStatus("RATED");
-        booking.setRatingStars(ratingRequest.getRatingStars());
-        booking.setRatingComment(ratingRequest.getRatingComment());
+        ratingRequest.setCreatedAt(LocalDateTime.now());
+
+        booking.setReview(ratingRequest);
 
         return ResponseEntity.ok(bookingRepository.save(booking));
     }

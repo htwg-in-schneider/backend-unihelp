@@ -29,8 +29,10 @@ public class Booking {
     private LocalDateTime bookedAt;
 
     private String paymentMethod;
-    private Integer ratingStars;
-    private String ratingComment;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "review_id", referencedColumnName = "id")
+    private Review review;
 
     public Booking() {
     }
@@ -123,19 +125,11 @@ public class Booking {
         this.paymentMethod = paymentMethod;
     }
 
-    public Integer getRatingStars() {
-        return ratingStars;
+    public Review getReview() {
+        return review;
     }
 
-    public void setRatingStars(Integer ratingStars) {
-        this.ratingStars = ratingStars;
-    }
-
-    public String getRatingComment() {
-        return ratingComment;
-    }
-
-    public void setRatingComment(String ratingComment) {
-        this.ratingComment = ratingComment;
+    public void setReview(Review review) {
+        this.review = review;
     }
 }
