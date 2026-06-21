@@ -29,6 +29,9 @@ public class ModerationController {
     @Autowired
     private ReportRepository reportRepository;
 
+    @Autowired
+    private BookingRepository bookingRepository;
+
     private boolean isModerator(Jwt jwt) {
         if (jwt == null)
             return false;
@@ -36,12 +39,19 @@ public class ModerationController {
         return user.isPresent() && (user.get().getRole() == Role.MODERATOR || user.get().getRole() == Role.ADMIN);
     }
 
+    private boolean isAdmin(Jwt jwt) {
+        if (jwt == null)
+            return false;
+        Optional<User> user = userRepository.findByOauthId(jwt.getSubject());
+        return user.isPresent() && user.get().getRole() == Role.ADMIN;
+    }
+
     private void closeReportsFor(String targetType, Long targetId) {
         List<Report> allReports = reportRepository.findAll();
-        for (Report r : allReports) {
-            if (targetType.equals(r.getTargetType()) && r.getTargetId().equals(targetId)) {
-                r.setStatus("CLOSED");
-                reportRepository.save(r);
+        for (Report report : allReports) {
+            if (targetType.equals(report.getTargetType()) && report.getTargetId().equals(targetId)) {
+                report.setStatus("CLOSED");
+                reportRepository.save(report);
             }
         }
     }
@@ -60,19 +70,26 @@ public class ModerationController {
         return ResponseEntity.ok(userRepository.findAll());
     }
 
+    @GetMapping("/bookings")
+    public ResponseEntity<List<Booking>> getAllBookings(@AuthenticationPrincipal Jwt jwt) {
+        if (!isAdmin(jwt))
+            return ResponseEntity.status(403).build();
+        return ResponseEntity.ok(bookingRepository.findAll());
+    }
+
     @GetMapping("/suspensions")
     public ResponseEntity<List<Suspension>> getSuspensions(@AuthenticationPrincipal Jwt jwt) {
         if (!isModerator(jwt))
             return ResponseEntity.status(403).build();
 
-        List<Suspension> all = suspensionRepository.findAll();
+        List<Suspension> allSuspensions = suspensionRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
-        for (Suspension s : all) {
-            if ("TEMPORARY".equals(s.getType()) && s.getUntilDate() != null && now.isAfter(s.getUntilDate())) {
-                suspensionRepository.delete(s);
+        for (Suspension suspension : allSuspensions) {
+            if ("TEMPORARY".equals(suspension.getType()) && suspension.getUntilDate() != null
+                    && now.isAfter(suspension.getUntilDate())) {
+                suspensionRepository.delete(suspension);
             }
         }
-
         return ResponseEntity.ok(suspensionRepository.findAll());
     }
 
@@ -85,10 +102,10 @@ public class ModerationController {
         Long targetId = ((Number) payload.get("targetId")).longValue();
 
         List<Report> allReports = reportRepository.findAll();
-        for (Report r : allReports) {
-            if (targetType.equals(r.getTargetType()) && r.getTargetId().equals(targetId)) {
-                r.setStatus("CLOSED");
-                reportRepository.save(r);
+        for (Report report : allReports) {
+            if (targetType.equals(report.getTargetType()) && report.getTargetId().equals(targetId)) {
+                report.setStatus("CLOSED");
+                reportRepository.save(report);
             }
         }
         return ResponseEntity.ok().build();
@@ -103,10 +120,10 @@ public class ModerationController {
         Long targetId = ((Number) payload.get("targetId")).longValue();
 
         List<Report> allReports = reportRepository.findAll();
-        for (Report r : allReports) {
-            if (targetType.equals(r.getTargetType()) && r.getTargetId().equals(targetId)) {
-                r.setStatus("OPEN");
-                reportRepository.save(r);
+        for (Report report : allReports) {
+            if (targetType.equals(report.getTargetType()) && report.getTargetId().equals(targetId)) {
+                report.setStatus("OPEN");
+                reportRepository.save(report);
             }
         }
         return ResponseEntity.ok().build();
@@ -137,8 +154,36 @@ public class ModerationController {
             }
         }
 
+        List<Report> existing = reportRepository.findAll();
+        for (Report r : existing) {
+            if (report.getTargetType().equals(r.getTargetType())
+                    && report.getTargetId() != null
+                    && report.getTargetId().equals(r.getTargetId())
+                    && "CLOSED".equals(r.getStatus())) {
+                r.setStatus("OPEN");
+                reportRepository.save(r);
+            }
+        }
+
         reportRepository.save(report);
         return ResponseEntity.ok(report);
+    }
+
+    @DeleteMapping("/review/{id}")
+    public ResponseEntity<Void> deleteReview(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
+        if (!isModerator(jwt))
+            return ResponseEntity.status(403).build();
+
+        List<Booking> bookings = bookingRepository.findAll();
+        for (Booking booking : bookings) {
+            if (booking.getReview() != null && booking.getReview().getId().equals(id)) {
+                booking.setReview(null);
+                booking.setStatus("PAID");
+                bookingRepository.save(booking);
+                return ResponseEntity.noContent().build();
+            }
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping("/user/{id}/ban")
@@ -165,9 +210,9 @@ public class ModerationController {
             return ResponseEntity.status(403).build();
 
         List<Suspension> suspensions = suspensionRepository.findAll();
-        for (Suspension s : suspensions) {
-            if (s.getUser() != null && s.getUser().getId().equals(id)) {
-                suspensionRepository.delete(s);
+        for (Suspension suspension : suspensions) {
+            if (suspension.getUser() != null && suspension.getUser().getId().equals(id)) {
+                suspensionRepository.delete(suspension);
             }
         }
         return ResponseEntity.ok().build();
