@@ -55,6 +55,11 @@ public class BookingController {
             return ResponseEntity.badRequest().build();
 
         Availability avail = optAvail.get();
+
+        if (jwt.getSubject().equals(avail.getOffer().getOwnerOauthId())) {
+            return ResponseEntity.badRequest().build();
+        }
+
         avail.setBooked(true);
         availabilityRepository.save(avail);
 
