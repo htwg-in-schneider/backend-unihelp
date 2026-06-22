@@ -9,6 +9,11 @@ import de.htwg.in.schneider.unihelp.backend.model.Format;
 import de.htwg.in.schneider.unihelp.backend.model.Availability;
 import de.htwg.in.schneider.unihelp.backend.repository.OfferRepository;
 
+import de.htwg.in.schneider.unihelp.backend.model.Role;
+import de.htwg.in.schneider.unihelp.backend.model.User;
+import de.htwg.in.schneider.unihelp.backend.repository.UserRepository;
+import java.util.Optional;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -21,8 +26,11 @@ public class DataLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLoader.class);
 
     @Bean
-    public CommandLineRunner loadData(OfferRepository repository) {
+    public CommandLineRunner loadData(UserRepository userRepository, OfferRepository repository) {
         return args -> {
+            
+            loadInitialUsers(userRepository);
+
             if (repository.count() == 0) {
                 LOGGER.info("Database is empty. Loading initial UniHelp data...");
                 loadInitialData(repository);
@@ -30,6 +38,32 @@ public class DataLoader {
                 LOGGER.info("Database already contains data. Skipping data loading.");
             }
         };
+    }
+
+    private void loadInitialUsers(UserRepository userRepository) {
+        upsertUser(userRepository, "Admin User", "unihelp123+admin@proton.me", "auth0|6a1c630b7bfc0b6bec838780", Role.ADMIN);
+        upsertUser(userRepository, "Tutor User", "unihelp123+tutor@proton.me", "auth0|6a1c635884ff7a3d241deb66", Role.REGULAR);
+        upsertUser(userRepository, "Student User", "unihelp123+student@proton.me", "auth0|6a1c63c884ff7a3d241debaf", Role.REGULAR);
+    }
+
+    private void upsertUser(UserRepository userRepository, String name, String email, String oauthId, Role role) {
+        Optional<User> existing = userRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            User e = existing.get();
+            e.setName(name);
+            e.setOauthId(oauthId);
+            e.setRole(role);
+            userRepository.save(e);
+            LOGGER.info("Updated existing {} user with email={}", role, email);
+        } else {
+            User u = new User();
+            u.setName(name);
+            u.setEmail(email);
+            u.setOauthId(oauthId);
+            u.setRole(role);
+            userRepository.save(u);
+            LOGGER.info("Created new {} user with email={}", role, email);
+        }
     }
 
     private void loadInitialData(OfferRepository repository) {
