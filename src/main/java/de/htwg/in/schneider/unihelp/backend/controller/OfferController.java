@@ -116,6 +116,10 @@ public class OfferController {
             return ResponseEntity.status(403).build();
         }
 
+        if (offer.getPrice() <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+
         if (offer.getId() != null) {
             offer.setId(null);
         }
@@ -150,6 +154,10 @@ public class OfferController {
 
         if (!isOwnerOrAdmin(jwt, offer)) {
             return ResponseEntity.status(403).build();
+        }
+
+        if (offerDetails.getPrice() <= 0) {
+            return ResponseEntity.badRequest().build();
         }
 
         offer.setUniversity(offerDetails.getUniversity());
@@ -202,6 +210,14 @@ public class OfferController {
 
         if (!isOwnerOrAdmin(jwt, opt.get())) {
             return ResponseEntity.status(403).build();
+        }
+
+        List<Booking> bookings = bookingRepository.findByOfferId(id);
+        for (Booking booking : bookings) {
+            if (!"CANCELLED".equals(booking.getStatus())) {
+                booking.setStatus("CANCELLED");
+                bookingRepository.save(booking);
+            }
         }
 
         offerRepository.delete(opt.get());

@@ -10,5 +10,7 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByStudentOauthIdOrTutorOauthId(String studentOauthId, String tutorOauthId);
 
+    List<Booking> findByOfferId(Long offerId);
+
     List<Booking> findByOfferIdAndStatus(Long offerId, String status);
 }
