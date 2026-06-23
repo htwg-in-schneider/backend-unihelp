@@ -97,6 +97,16 @@ public class ProfileController {
                 return banCheck;
             }
 
+            String newUsername = updatedUser.getUsername();
+            if (newUsername != null && !newUsername.equals(user.getUsername())) {
+                Optional<User> existing = userRepository.findByUsername(newUsername);
+                if (existing.isPresent()) {
+                    Map<String, String> res = new HashMap<>();
+                    res.put("error", "USERNAME_TAKEN");
+                    return ResponseEntity.status(409).body(res);
+                }
+            }
+
             user.setFirstName(updatedUser.getFirstName());
             user.setLastName(updatedUser.getLastName());
             user.setUsername(updatedUser.getUsername());
