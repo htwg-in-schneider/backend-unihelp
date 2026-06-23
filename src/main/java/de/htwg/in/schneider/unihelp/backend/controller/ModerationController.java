@@ -159,6 +159,16 @@ public class ModerationController {
             if (report.getTargetType().equals(r.getTargetType())
                     && report.getTargetId() != null
                     && report.getTargetId().equals(r.getTargetId())
+                    && jwt.getSubject().equals(r.getReporterOauthId())
+                    && "OPEN".equals(r.getStatus())) {
+                return ResponseEntity.status(409).build();
+            }
+        }
+
+        for (Report r : existing) {
+            if (report.getTargetType().equals(r.getTargetType())
+                    && report.getTargetId() != null
+                    && report.getTargetId().equals(r.getTargetId())
                     && "CLOSED".equals(r.getStatus())) {
                 r.setStatus("OPEN");
                 reportRepository.save(r);
@@ -255,6 +265,14 @@ public class ModerationController {
     public ResponseEntity<Void> deleteOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
         if (!isModerator(jwt))
             return ResponseEntity.status(403).build();
+
+        List<Booking> bookings = bookingRepository.findByOfferId(id);
+        for (Booking booking : bookings) {
+            if (!"CANCELLED".equals(booking.getStatus())) {
+                booking.setStatus("CANCELLED");
+                bookingRepository.save(booking);
+            }
+        }
 
         offerRepository.deleteById(id);
         closeReportsFor("OFFER", id);
