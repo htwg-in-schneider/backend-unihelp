@@ -99,11 +99,7 @@ public class ModerationController {
         if (!isModerator(jwt))
             return ResponseEntity.status(403).build();
         String targetType = (String) payload.get("targetType");
-        Object targetIdRaw = payload.get("targetId");
-        if (targetType == null || !(targetIdRaw instanceof Number)) {
-            return ResponseEntity.badRequest().build();
-        }
-        Long targetId = ((Number) targetIdRaw).longValue();
+        Long targetId = ((Number) payload.get("targetId")).longValue();
 
         List<Report> allReports = reportRepository.findAll();
         for (Report report : allReports) {
@@ -121,11 +117,7 @@ public class ModerationController {
         if (!isModerator(jwt))
             return ResponseEntity.status(403).build();
         String targetType = (String) payload.get("targetType");
-        Object targetIdRaw = payload.get("targetId");
-        if (targetType == null || !(targetIdRaw instanceof Number)) {
-            return ResponseEntity.badRequest().build();
-        }
-        Long targetId = ((Number) targetIdRaw).longValue();
+        Long targetId = ((Number) payload.get("targetId")).longValue();
 
         List<Report> allReports = reportRepository.findAll();
         for (Report report : allReports) {
@@ -143,30 +135,16 @@ public class ModerationController {
         if (jwt == null)
             return ResponseEntity.status(401).build();
 
-        String reason = (String) payload.get("reason");
-        if (reason == null || reason.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        String targetType = (String) payload.get("targetType");
-        if (!"OFFER".equals(targetType) && !"USER".equals(targetType)) {
-            return ResponseEntity.badRequest().build();
-        }
-
         Report report = new Report();
         report.setReporterOauthId(jwt.getSubject());
         report.setCreatedAt(LocalDateTime.now());
         report.setStatus("OPEN");
-        report.setReason(reason.trim());
-        report.setTargetType(targetType);
+        report.setReason((String) payload.get("reason"));
+        report.setTargetType((String) payload.get("targetType"));
 
         if ("OFFER".equals(report.getTargetType())) {
-            Object targetIdRaw = payload.get("targetId");
-            if (!(targetIdRaw instanceof Number)) {
-                return ResponseEntity.badRequest().build();
-            }
-            report.setTargetId(((Number) targetIdRaw).longValue());
-        } else {
+            report.setTargetId(((Number) payload.get("targetId")).longValue());
+        } else if ("USER".equals(report.getTargetType())) {
             String targetOauthId = (String) payload.get("targetOauthId");
             Optional<User> targetUser = userRepository.findByOauthId(targetOauthId);
             if (targetUser.isPresent()) {
@@ -220,7 +198,7 @@ public class ModerationController {
 
     @PostMapping("/user/{id}/ban")
     public ResponseEntity<Void> banUser(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
-            @RequestBody Map<String, String> payload) {
+            @RequestBody Suspension suspensionData) {
         if (!isModerator(jwt))
             return ResponseEntity.status(403).build();
 
@@ -228,36 +206,9 @@ public class ModerationController {
         if (!targetUser.isPresent())
             return ResponseEntity.notFound().build();
 
-        String type = payload.get("type");
-        if (!"PERMANENT".equals(type) && !"TEMPORARY".equals(type)) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        String reason = payload.get("reason");
-        if (reason == null || reason.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        Suspension suspension = new Suspension();
-        suspension.setType(type);
-        suspension.setReason(reason.trim());
-
-        if ("TEMPORARY".equals(type)) {
-            String until = payload.get("until");
-            if (until == null || until.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            try {
-                java.time.LocalDate untilDate = java.time.LocalDate.parse(until.trim());
-                suspension.setUntilDate(untilDate.atTime(java.time.LocalTime.MAX));
-            } catch (java.time.format.DateTimeParseException e) {
-                return ResponseEntity.badRequest().build();
-            }
-        }
-
-        suspension.setUser(targetUser.get());
-        suspension.setCreatedAt(LocalDateTime.now());
-        suspensionRepository.save(suspension);
+        suspensionData.setUser(targetUser.get());
+        suspensionData.setCreatedAt(LocalDateTime.now());
+        suspensionRepository.save(suspensionData);
 
         closeReportsFor("USER", id);
         return ResponseEntity.ok().build();
@@ -307,30 +258,6 @@ public class ModerationController {
         u.setIsDeleted(false);
         userRepository.save(u);
 
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/user/{id}/role")
-    public ResponseEntity<Void> changeUserRole(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
-            @RequestBody Map<String, String> payload) {
-        if (!isAdmin(jwt))
-            return ResponseEntity.status(403).build();
-
-        Optional<User> targetUser = userRepository.findById(id);
-        if (!targetUser.isPresent())
-            return ResponseEntity.notFound().build();
-
-        String roleName = payload.get("role");
-        Role newRole;
-        try {
-            newRole = Role.valueOf(roleName);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-
-        User u = targetUser.get();
-        u.setRole(newRole);
-        userRepository.save(u);
         return ResponseEntity.ok().build();
     }
 

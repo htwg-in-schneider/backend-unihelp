@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import de.htwg.in.schneider.unihelp.backend.model.Booking;
 import de.htwg.in.schneider.unihelp.backend.model.Availability;
-import de.htwg.in.schneider.unihelp.backend.model.Payment;
 import de.htwg.in.schneider.unihelp.backend.model.User;
 import de.htwg.in.schneider.unihelp.backend.model.Review;
 import de.htwg.in.schneider.unihelp.backend.repository.BookingRepository;
@@ -26,9 +25,6 @@ import java.util.Optional;
 public class BookingController {
 
     private static final Logger LOG = LoggerFactory.getLogger(BookingController.class);
-
-    private static final List<String> ALLOWED_PAYMENT_METHODS = List.of(
-            "paypal", "bitcoin", "sepa", "applepay", "googlepay");
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -53,10 +49,6 @@ public class BookingController {
             @RequestBody Booking bookingRequest) {
         if (jwt == null || jwt.getSubject() == null)
             return ResponseEntity.status(403).build();
-
-        if (bookingRequest.getAvailability() == null || bookingRequest.getAvailability().getId() == null) {
-            return ResponseEntity.badRequest().build();
-        }
 
         Optional<Availability> optAvail = availabilityRepository.findById(bookingRequest.getAvailability().getId());
         if (!optAvail.isPresent() || optAvail.get().isBooked())
@@ -95,10 +87,7 @@ public class BookingController {
 
     @PutMapping("/{id}/pay")
     public ResponseEntity<Booking> payBooking(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
-            @RequestBody Payment paymentRequest) {
-        if (jwt == null || jwt.getSubject() == null)
-            return ResponseEntity.status(403).build();
-
+            @RequestBody Booking paymentRequest) {
         Optional<Booking> opt = bookingRepository.findById(id);
         if (!opt.isPresent())
             return ResponseEntity.notFound().build();
@@ -107,24 +96,8 @@ public class BookingController {
         if (!booking.getStudentOauthId().equals(jwt.getSubject()))
             return ResponseEntity.status(403).build();
 
-        String method = paymentRequest.getPaymentMethod();
-        if (method == null || !ALLOWED_PAYMENT_METHODS.contains(method.trim().toLowerCase())) {
-            return ResponseEntity.badRequest().build();
-        }
-        method = method.trim().toLowerCase();
-
-        java.math.BigDecimal amount = booking.getOffer() != null
-                ? java.math.BigDecimal.valueOf(booking.getOffer().getPrice())
-                : java.math.BigDecimal.ZERO;
-
-        Payment payment = new Payment();
-        payment.setPaymentMethod(method);
-        payment.setAmount(amount);
-        payment.setStatus("PAID");
-        payment.setPaidAt(java.time.LocalDateTime.now());
-
-        booking.setPayment(payment);
         booking.setStatus("PAID");
+        booking.setPaymentMethod(paymentRequest.getPaymentMethod());
 
         return ResponseEntity.ok(bookingRepository.save(booking));
     }
@@ -132,9 +105,6 @@ public class BookingController {
     @PutMapping("/{id}/rate")
     public ResponseEntity<Booking> rateBooking(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
             @RequestBody Review ratingRequest) {
-        if (jwt == null || jwt.getSubject() == null)
-            return ResponseEntity.status(403).build();
-
         Optional<Booking> opt = bookingRepository.findById(id);
         if (!opt.isPresent())
             return ResponseEntity.notFound().build();
@@ -142,11 +112,6 @@ public class BookingController {
         Booking booking = opt.get();
         if (!booking.getStudentOauthId().equals(jwt.getSubject()))
             return ResponseEntity.status(403).build();
-
-        Integer stars = ratingRequest.getRatingStars();
-        if (stars == null || stars < 1 || stars > 5) {
-            return ResponseEntity.badRequest().build();
-        }
 
         booking.setStatus("RATED");
         ratingRequest.setCreatedAt(LocalDateTime.now());
