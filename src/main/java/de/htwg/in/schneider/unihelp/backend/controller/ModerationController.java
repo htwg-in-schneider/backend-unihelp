@@ -261,6 +261,30 @@ public class ModerationController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/user/{id}/role")
+    public ResponseEntity<Void> changeUserRole(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+        if (!isAdmin(jwt))
+            return ResponseEntity.status(403).build();
+
+        Optional<User> targetUser = userRepository.findById(id);
+        if (!targetUser.isPresent())
+            return ResponseEntity.notFound().build();
+
+        String roleName = payload.get("role");
+        Role newRole;
+        try {
+            newRole = Role.valueOf(roleName);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        User u = targetUser.get();
+        u.setRole(newRole);
+        userRepository.save(u);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/offer/{id}")
     public ResponseEntity<Void> deleteOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id) {
         if (!isModerator(jwt))
