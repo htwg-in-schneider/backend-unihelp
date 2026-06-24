@@ -249,6 +249,9 @@ public class ModerationController {
             }
             try {
                 java.time.LocalDate untilDate = java.time.LocalDate.parse(until.trim());
+                if (untilDate.isBefore(java.time.LocalDate.now())) {
+                    return ResponseEntity.badRequest().build();
+                }
                 suspension.setUntilDate(untilDate.atTime(java.time.LocalTime.MAX));
             } catch (java.time.format.DateTimeParseException e) {
                 return ResponseEntity.badRequest().build();
@@ -340,12 +343,7 @@ public class ModerationController {
             return ResponseEntity.status(403).build();
 
         List<Booking> bookings = bookingRepository.findByOfferId(id);
-        for (Booking booking : bookings) {
-            if (!"CANCELLED".equals(booking.getStatus())) {
-                booking.setStatus("CANCELLED");
-                bookingRepository.save(booking);
-            }
-        }
+        bookingRepository.deleteAll(bookings);
 
         offerRepository.deleteById(id);
         closeReportsFor("OFFER", id);
