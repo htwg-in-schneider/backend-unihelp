@@ -228,6 +228,10 @@ public class ModerationController {
         if (!targetUser.isPresent())
             return ResponseEntity.notFound().build();
 
+        if (jwt.getSubject() != null && jwt.getSubject().equals(targetUser.get().getOauthId())) {
+            return ResponseEntity.status(403).build();
+        }
+
         String type = payload.get("type");
         if (!"PERMANENT".equals(type) && !"TEMPORARY".equals(type)) {
             return ResponseEntity.badRequest().build();
@@ -288,6 +292,10 @@ public class ModerationController {
         Optional<User> targetUser = userRepository.findById(id);
         if (!targetUser.isPresent())
             return ResponseEntity.notFound().build();
+
+        if (jwt.getSubject() != null && jwt.getSubject().equals(targetUser.get().getOauthId())) {
+            return ResponseEntity.status(403).build();
+        }
 
         User u = targetUser.get();
         u.setIsDeleted(true);
