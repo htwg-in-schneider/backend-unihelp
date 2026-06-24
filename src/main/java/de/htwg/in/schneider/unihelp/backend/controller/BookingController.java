@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import de.htwg.in.schneider.unihelp.backend.model.Booking;
 import de.htwg.in.schneider.unihelp.backend.model.Availability;
+import de.htwg.in.schneider.unihelp.backend.model.Payment;
 import de.htwg.in.schneider.unihelp.backend.model.User;
 import de.htwg.in.schneider.unihelp.backend.model.Review;
 import de.htwg.in.schneider.unihelp.backend.repository.BookingRepository;
@@ -87,7 +88,7 @@ public class BookingController {
 
     @PutMapping("/{id}/pay")
     public ResponseEntity<Booking> payBooking(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
-            @RequestBody Booking paymentRequest) {
+            @RequestBody Payment paymentRequest) {
         Optional<Booking> opt = bookingRepository.findById(id);
         if (!opt.isPresent())
             return ResponseEntity.notFound().build();
@@ -96,8 +97,20 @@ public class BookingController {
         if (!booking.getStudentOauthId().equals(jwt.getSubject()))
             return ResponseEntity.status(403).build();
 
+        String method = paymentRequest.getPaymentMethod();
+
+        java.math.BigDecimal amount = booking.getOffer() != null
+                ? java.math.BigDecimal.valueOf(booking.getOffer().getPrice())
+                : java.math.BigDecimal.ZERO;
+
+        Payment payment = new Payment();
+        payment.setPaymentMethod(method.trim());
+        payment.setAmount(amount);
+        payment.setStatus("PAID");
+        payment.setPaidAt(java.time.LocalDateTime.now());
+
+        booking.setPayment(payment);
         booking.setStatus("PAID");
-        booking.setPaymentMethod(paymentRequest.getPaymentMethod());
 
         return ResponseEntity.ok(bookingRepository.save(booking));
     }
