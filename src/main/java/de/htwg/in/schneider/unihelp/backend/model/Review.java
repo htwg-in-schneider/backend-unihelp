@@ -10,7 +10,9 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(nullable = false)
     private Integer ratingStars;
+
     private String ratingComment;
     private LocalDateTime createdAt;
 

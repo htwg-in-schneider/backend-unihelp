@@ -9,8 +9,12 @@ public class Suspension {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(nullable = false)
     private String type;
+
+    @Column(nullable = false)
     private String reason;
+
     private LocalDateTime untilDate;
     private LocalDateTime createdAt;
 
