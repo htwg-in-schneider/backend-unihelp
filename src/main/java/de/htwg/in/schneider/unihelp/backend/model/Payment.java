@@ -17,7 +17,7 @@ public class Payment {
     private LocalDateTime paidAt;
 
     public Payment() {
-    }
+    } 
 
     public Long getId() {
         return id;
