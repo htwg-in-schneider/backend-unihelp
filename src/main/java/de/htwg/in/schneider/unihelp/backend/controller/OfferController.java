@@ -222,12 +222,7 @@ public class OfferController {
         }
 
         List<Booking> bookings = bookingRepository.findByOfferId(id);
-        for (Booking booking : bookings) {
-            if (!"CANCELLED".equals(booking.getStatus())) {
-                booking.setStatus("CANCELLED");
-                bookingRepository.save(booking);
-            }
-        }
+        bookingRepository.deleteAll(bookings);
 
         offerRepository.delete(opt.get());
         LOG.info("Deleted offer with id " + id);
