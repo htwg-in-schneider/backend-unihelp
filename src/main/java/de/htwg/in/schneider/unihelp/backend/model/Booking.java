@@ -28,9 +28,7 @@ public class Booking {
     private String status;
     private LocalDateTime bookedAt;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "payment_id", referencedColumnName = "id")
-    private Payment payment;
+    private String paymentMethod;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "review_id", referencedColumnName = "id")
@@ -119,12 +117,12 @@ public class Booking {
         this.bookedAt = bookedAt;
     }
 
-    public Payment getPayment() {
-        return payment;
+    public String getPaymentMethod() {
+        return paymentMethod;
     }
 
-    public void setPayment(Payment payment) {
-        this.payment = payment;
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
     public Review getReview() {

@@ -1,7 +1,6 @@
 package de.htwg.in.schneider.unihelp.backend.model;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -24,26 +23,14 @@ public class Offer {
     private Long id;
 
     private String ownerName;
-
-    @Column(nullable = false)
     private String university;
-
-    @Column(nullable = false)
     private String course;
-
-    @Column(nullable = false)
     private String module;
-
-    @Column(nullable = false)
     private Double price;
-
     private String description;
-
-    @Column(nullable = false)
     private String language;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Format format;
 
     private Boolean isActive;

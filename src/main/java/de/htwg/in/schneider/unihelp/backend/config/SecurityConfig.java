@@ -18,8 +18,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/profile").authenticated()
                         .requestMatchers("/api/moderation/**").authenticated()
                         .requestMatchers("/api/user/**").authenticated()
-                        .requestMatchers("/api/booking/**").authenticated()
-                        .requestMatchers("/api/messages/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/offer", "/api/offer/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/offer/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/offer/**").authenticated()

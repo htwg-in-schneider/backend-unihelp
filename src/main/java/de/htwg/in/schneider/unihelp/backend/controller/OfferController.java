@@ -58,35 +58,6 @@ public class OfferController {
         return offer.getOwnerOauthId() != null && offer.getOwnerOauthId().equals(jwt.getSubject());
     }
 
-    private boolean isValidOffer(Offer offer) {
-        if (offer == null) {
-            return false;
-        }
-        if (isBlank(offer.getModule()) || isBlank(offer.getUniversity())
-                || isBlank(offer.getCourse()) || isBlank(offer.getLanguage())) {
-            return false;
-        }
-        if (offer.getFormat() == null) {
-            return false;
-        }
-        if (offer.getPrice() <= 0) {
-            return false;
-        }
-        if (offer.getAvailabilities() != null) {
-            for (var avail : offer.getAvailabilities()) {
-                if (avail.getStartTime() != null && avail.getEndTime() != null
-                        && !avail.getEndTime().isAfter(avail.getStartTime())) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
-
     @GetMapping
     public List<Offer> getOffers(
             @RequestParam(required = false) String search,
@@ -145,7 +116,7 @@ public class OfferController {
             return ResponseEntity.status(403).build();
         }
 
-        if (!isValidOffer(offer)) {
+        if (offer.getPrice() <= 0) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -185,7 +156,7 @@ public class OfferController {
             return ResponseEntity.status(403).build();
         }
 
-        if (!isValidOffer(offerDetails)) {
+        if (offerDetails.getPrice() <= 0) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -203,6 +174,26 @@ public class OfferController {
 
         Offer updatedOffer = offerRepository.save(offer);
         LOG.info("Updated offer with id " + updatedOffer.getId());
+        return ResponseEntity.ok(updatedOffer);
+    }
+
+    @PutMapping("/{id}/book")
+    public ResponseEntity<Offer> bookOffer(@AuthenticationPrincipal Jwt jwt, @PathVariable Long id,
+            @RequestBody Offer offerDetails) {
+        if (!isRegisteredUser(jwt)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<Offer> opt = offerRepository.findById(id);
+        if (!opt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Offer offer = opt.get();
+        offer.setAvailabilities(offerDetails.getAvailabilities());
+
+        Offer updatedOffer = offerRepository.save(offer);
+        LOG.info("User {} updated bookings for offer {}", jwt.getSubject(), id);
         return ResponseEntity.ok(updatedOffer);
     }
 
