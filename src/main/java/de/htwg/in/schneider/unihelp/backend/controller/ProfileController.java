@@ -32,6 +32,10 @@ public class ProfileController {
     @Autowired
     private SuspensionRepository suspensionRepository;
 
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
     private ResponseEntity<Map<String, String>> checkBannedOrDeleted(User user) {
         if (Boolean.TRUE.equals(user.getIsDeleted())) {
             Map<String, String> res = new HashMap<>();
@@ -88,6 +92,13 @@ public class ProfileController {
     public ResponseEntity<?> updateProfile(@AuthenticationPrincipal Jwt jwt, @RequestBody User updatedUser) {
         String oauthId = jwt.getSubject();
         if (oauthId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (isBlank(updatedUser.getFirstName()) || isBlank(updatedUser.getLastName())
+                || isBlank(updatedUser.getUsername()) || isBlank(updatedUser.getEmail())
+                || isBlank(updatedUser.getUniversity()) || isBlank(updatedUser.getCourse())
+                || isBlank(updatedUser.getLanguage())) {
             return ResponseEntity.badRequest().build();
         }
 

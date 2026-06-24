@@ -45,12 +45,26 @@ public class MessageController {
         if (!senderOpt.isPresent())
             return ResponseEntity.badRequest().build();
 
+        String content = payload.get("content");
+        if (content == null || content.trim().isEmpty() || content.length() > 1000) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        String receiverOauthId = payload.get("receiverOauthId");
+        if (receiverOauthId == null || receiverOauthId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        Optional<User> receiverOpt = userRepository.findByOauthId(receiverOauthId);
+        if (!receiverOpt.isPresent()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         Message msg = new Message();
         msg.setSenderOauthId(senderId);
         msg.setSenderName(senderOpt.get().getName());
-        msg.setReceiverOauthId(payload.get("receiverOauthId"));
-        msg.setReceiverName(payload.get("receiverName"));
-        msg.setContent(payload.get("content"));
+        msg.setReceiverOauthId(receiverOauthId);
+        msg.setReceiverName(receiverOpt.get().getName());
+        msg.setContent(content.trim());
         msg.setTimestamp(LocalDateTime.now());
         msg.setRead(false);
 
