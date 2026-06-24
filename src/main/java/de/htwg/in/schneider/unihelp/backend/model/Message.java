@@ -16,7 +16,7 @@ public class Message {
     private String receiverOauthId;
     private String receiverName;
 
-    @Column(length = 1000)
+    @Column(length = 1000, nullable = false)
     private String content;
 
     private LocalDateTime timestamp;
